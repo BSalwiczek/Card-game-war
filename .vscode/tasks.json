@@ -11,7 +11,7 @@
         {
             "type": "shell",
             "label": "gcc build active file2",
-            "command": "gcc main.o $(ncursesw5-config --libs) -o main"
+            "command": "gcc main.o -lncursesw -ltinfo -o main"
         }
         // {
         //     "type": "shell",
