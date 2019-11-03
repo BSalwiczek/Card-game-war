@@ -1,0 +1,2 @@
+https://en.wikipedia.org/wiki/Playing_cards_in_Unicode
+http://jafrog.com/2013/11/23/colors-in-terminal.html

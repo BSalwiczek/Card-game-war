@@ -1,0 +1,55 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558 
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "gcc build active file",
+            "command": "gcc main.c -D_GNU_SOURCE -D_DEFAULT_SOURCE -I/usr/include/ncursesw -c"
+        },
+        {
+            "type": "shell",
+            "label": "gcc build active file2",
+            "command": "gcc main.o $(ncursesw5-config --libs) -o main"
+        }
+        // {
+        //     "type": "shell",
+        //     "label": "gcc build active file",
+        //     "command": "/usr/bin/gcc",
+        //     "args": [
+        //         "${file}",
+        //         "-D_GNU_SOURCE",
+        //         "-D_DEFAULT_SOURCE",
+        //         "-I/usr/include/ncursesw",
+        //         "-c",
+        //     ],
+        //     "options": {
+        //         "cwd": "/usr/bin"
+        //     },
+        //     "problemMatcher": [
+        //         "$gcc"
+        //     ],
+        //     "group": "build"
+        // },
+        // {
+        //     "type": "shell",
+        //     "label": "gcc build active file",
+        //     "command": "/usr/bin/gcc",
+        //     "args": [
+        //         "${file}",
+        //         "-lncursesw",
+        //         "-ltinfo",
+        //         "-o",
+        //         "${fileDirname}/${fileBasenameNoExtension}"
+        //     ],
+        //     "options": {
+        //         "cwd": "/usr/bin"
+        //     },
+        //     "problemMatcher": [
+        //         "$gcc"
+        //     ],
+        //     "group": "build"
+        // }
+    ]
+}
