@@ -1,22 +1,47 @@
+#define SHUFFLE_SIZE 1000 //wyznacza ile ma zostać wykonanych zamienień w talii
+#define SUIT_SIZE 13
+#define EMPTY -1
 
-void drawOutput(int stack1[],int stack2[], int stacks_len, int hand1[], int hand2[]);
+typedef enum {
+    playing,
+    win,
+    defeat,
+} status_t;
 
-void drawCardsQueue(int y,int x,int hand[]);
+typedef enum {
+    A,
+    B
+} variant_t;
 
-void endGame(short winner);
+typedef struct {
+    int *hand;
+    int *stack;
+    char *name;
+    status_t player_status;
+} player_t;
 
-void drawCard(int y,int x,int number, short show_card, short color);
+typedef struct{
+    int DECK_SIZE;
+    variant_t variant;
+} game_t;
 
-void initializeDeckWithRandomNumbers(int deck[]);
+void endGame(player_t* winner);
 
-void splitIntoTwoHands(int deck[],int hand1[],int hand2[]);
+void initializeDeckWithRandomNumbers(int deck[], game_t game);
 
-void battle(int from[], int to[]);
+void splitIntoTwoHands(int deck[],player_t* player1,player_t* player2, game_t game);
 
-void playGame(int hand1[],int hand2[]);
+void playGame(player_t* player1,player_t* player2, game_t game);
 
-void shiftCardLeft(int hand[], int steps);  //przesunięcie kart jednej talii o steps w lewo
+void shiftCardLeft(int hand[], int steps, int DECK_SIZE);  //przesunięcie kart jednej talii o steps w lewo
 
-int war(int hand1[], int hand2[]);
+int war(player_t* player1, player_t* player2, game_t game);
 
-void printHands(int hand1[],int hand2[]);
+void variantBsplitCards(player_t* player1, player_t* player2, int cards_in_war,int DECK_SIZE);
+
+void giveCardsToWinner(player_t* winner, player_t* looser, short cards_in_war, int DECK_SIZE);
+
+void clearStacks(player_t* player1, player_t* player2, int DECK_SIZE);
+
+// void printHands(int hand1[],int hand2[]);
+
