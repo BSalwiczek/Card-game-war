@@ -2,44 +2,46 @@
 
 void drawOutput(player_t player1[],player_t player2[], int DECK_SIZE)
 {
-    clear();
-
-    for(int i=0;i<DECK_SIZE;i++)
+    if(!SIMULATION_MODE)
     {
-        if(player1->stack[i] == EMPTY)
-            break;
+        clear();
 
-        mvprintw(PLAYER1_POSITION_Y,PLAYER1_POSITION_X-7,"Gracz 1");
-        mvprintw(PLAYER2_POSITION_Y,PLAYER2_POSITION_X,"Gracz 2");
-        if(i%2 == 1 && i>0) 
+        for(int i=0;i<DECK_SIZE;i++)
         {
-            drawCard(LEFT_CARD_POSITION_Y+2*i,LEFT_CARD_POSITION_X,player1->stack[i],true,DEFAULT_COLOR); //false
-            drawCard(RIGHT_CARD_POSITION_Y+2*i,RIGHT_CARD_POSITION_X,player2->stack[i],true,DEFAULT_COLOR); //false
-            continue;
+            if(player1->stack[i] == EMPTY)
+                break;
+
+            mvprintw(PLAYER1_POSITION_Y,PLAYER1_POSITION_X-7,"Gracz 1");
+            mvprintw(PLAYER2_POSITION_Y,PLAYER2_POSITION_X,"Gracz 2");
+            if(i%2 == 1 && i>0) 
+            {
+                drawCard(LEFT_CARD_POSITION_Y+2*i,LEFT_CARD_POSITION_X,player1->stack[i],true,DEFAULT_COLOR); //false
+                drawCard(RIGHT_CARD_POSITION_Y+2*i,RIGHT_CARD_POSITION_X,player2->stack[i],true,DEFAULT_COLOR); //false
+                continue;
+            }
+
+            if(player1->stack[i]%SUIT_SIZE == player2->stack[i]%SUIT_SIZE){
+                drawCard(LEFT_CARD_POSITION_Y+2*i,LEFT_CARD_POSITION_X,player1->stack[i],true,DEFAULT_COLOR);
+                drawCard(RIGHT_CARD_POSITION_Y+2*i,RIGHT_CARD_POSITION_X,player2->stack[i],true,DEFAULT_COLOR);
+            }else if(player1->stack[i]%SUIT_SIZE > player2->stack[i]%SUIT_SIZE)
+            {
+                drawCard(LEFT_CARD_POSITION_Y+2*i,LEFT_CARD_POSITION_X,player1->stack[i],true,WIN_COLOR);
+                drawCard(RIGHT_CARD_POSITION_Y+2*i,RIGHT_CARD_POSITION_X,player2->stack[i],true,DEFEAT_COLOR);
+            }else{
+                drawCard(LEFT_CARD_POSITION_Y+2*i,LEFT_CARD_POSITION_X,player1->stack[i],true,DEFEAT_COLOR);
+                drawCard(RIGHT_CARD_POSITION_Y+2*i,RIGHT_CARD_POSITION_X,player2->stack[i],true,WIN_COLOR);
+            }
         }
 
-        if(player1->stack[i]%SUIT_SIZE == player2->stack[i]%SUIT_SIZE){
-            drawCard(LEFT_CARD_POSITION_Y+2*i,LEFT_CARD_POSITION_X,player1->stack[i],true,DEFAULT_COLOR);
-            drawCard(RIGHT_CARD_POSITION_Y+2*i,RIGHT_CARD_POSITION_X,player2->stack[i],true,DEFAULT_COLOR);
-        }else if(player1->stack[i]%SUIT_SIZE > player2->stack[i]%SUIT_SIZE)
-        {
-            drawCard(LEFT_CARD_POSITION_Y+2*i,LEFT_CARD_POSITION_X,player1->stack[i],true,WIN_COLOR);
-            drawCard(RIGHT_CARD_POSITION_Y+2*i,RIGHT_CARD_POSITION_X,player2->stack[i],true,DEFEAT_COLOR);
-        }else{
-            drawCard(LEFT_CARD_POSITION_Y+2*i,LEFT_CARD_POSITION_X,player1->stack[i],true,DEFEAT_COLOR);
-            drawCard(RIGHT_CARD_POSITION_Y+2*i,RIGHT_CARD_POSITION_X,player2->stack[i],true,WIN_COLOR);
-        }
+        drawCardsQueue(CARDS1_QUEUE_POSITION_Y,CARDS1_QUEUE_POSITION_X,player1->hand,DECK_SIZE);
+        drawCardsQueue(CARDS2_QUEUE_POSITION_Y,CARDS2_QUEUE_POSITION_X,player2->hand,DECK_SIZE);
+        
+
+        mvprintw(LINES/2+5,COLS/2 - 22,"Naciśnij dowolny przycisk aby kontynuować");
+        refresh();
+
+        getchar();
     }
-
-    drawCardsQueue(CARDS1_QUEUE_POSITION_Y,CARDS1_QUEUE_POSITION_X,player1->hand,DECK_SIZE);
-    drawCardsQueue(CARDS2_QUEUE_POSITION_Y,CARDS2_QUEUE_POSITION_X,player2->hand,DECK_SIZE);
-    
-
-    mvprintw(LINES/2+5,COLS/2 - 22,"Naciśnij dowolny przycisk aby kontynuować");
-    refresh();
-
-    getchar();
-
 }
 
 void drawCardsQueue(int y,int x,int hand[], int DECK_SIZE)
@@ -116,7 +118,7 @@ void determineNumber(int number,char *num_display)
             *num_display = 'J';
             break;
         case 10: //Dama
-            *num_display = 'D';
+            *num_display = 'Q';
             break;
         case 11: //Król
             *num_display = 'K';
