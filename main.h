@@ -2,6 +2,7 @@
 #define SUIT_SIZE 13
 #define EMPTY -1
 #define SIMULATION_MODE 1
+#define INFINITY -1
 
 typedef enum {
     playing,
@@ -16,6 +17,7 @@ typedef enum {
 
 typedef struct {
     int *hand;
+    int rank;
     int *stack;
     char *name;
     status_t player_status;
@@ -45,7 +47,8 @@ void giveCardsToWinner(player_t* winner, player_t* looser, short cards_in_war, i
 
 void clearStacks(player_t* player1, player_t* player2, int DECK_SIZE);
 
+void clearHands(player_t* player1, player_t* player2, int DECK_SIZE);
+
 void saveResults(player_t* player1, player_t* player2, game_t* game,FILE *file);
 
-// void printHands(int hand1[],int hand2[]);
-
+void determineHandRank(player_t* player, int DECK_SIZE);

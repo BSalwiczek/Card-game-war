@@ -36,15 +36,15 @@ int main()
         mvprintw(LINES/2+1,COLS/2-7,"%s",str);
         refresh();
     }else{
-        str[0] = '2';
-        str[1] = '0';
+        str[0] = '5';
+        str[1] = '2';
         str[2] = '\0';
     }
     
 
     game_t* game = malloc(sizeof(game_t));
     game->DECK_SIZE = atoi(str);
-    game->variant = A;
+    game->variant = B;
     game->moves = 0;
 
     player_t* player1 = malloc(sizeof(player_t));
@@ -54,11 +54,13 @@ int main()
     player1->stack = (int *) malloc(game->DECK_SIZE * sizeof(int));
     player1->player_status = playing;
     player1->name = "Gracz 1";
+    player1->rank = 0;
 
     player2->hand = (int *) malloc(game->DECK_SIZE * sizeof(int));
     player2->stack = (int *) malloc(game->DECK_SIZE * sizeof(int));   
     player2->player_status = playing;
     player2->name = "Gracz 2";
+    player2->rank = 0;
 
 
     int *deck = (int *) malloc(game->DECK_SIZE * sizeof(int));
@@ -79,28 +81,45 @@ int main()
     if(SIMULATION_MODE)
     {
 
+        game->DECK_SIZE = 52;
+
         printf("saving to file...\n");
         FILE *file;
-        file = fopen("run/Problem1/A1.txt","a");
+        file = fopen("run/Problem2/AB3.txt","a");
         if(file == NULL){
             printf("Otwarcie pliku nie powiodło sie\n");
             return 0;
         }
 
-        fprintf(file, "Deck size,");
-        fprintf(file, "Moves,");
-        fprintf(file, "Variant,");
-        fprintf(file, "Winner\n");
+        // fprintf(file, "Deck size,");
+        // fprintf(file, "Moves,");
+        // fprintf(file, "Variant,");
+        // fprintf(file, "Rank1,");
+        // fprintf(file, "Rank2,");
+        // fprintf(file, "Winner\n");
 
-        for(int i=1;i<1001;i++)
+        for(int i=1;i<2001;i++)
         {
+            player1->rank = 0;
+            player2->rank = 0;
+            clearHands(player1, player2, game->DECK_SIZE);
+            clearStacks(player1, player2, game->DECK_SIZE);
             srand((int) time(NULL)/i);
             initializeDeckWithRandomNumbers(deck, game);
+
             splitIntoTwoHands(deck,player1,player2, game);
+
+            determineHandRank(player1,game->DECK_SIZE);
+            determineHandRank(player2,game->DECK_SIZE);
+
             playGame(player1,player2, game);
             saveResults(player1,player2,game,file);
+
             game->moves = 0;
+            player1->rank = 0;
+            player2->rank = 0;
         }
+        
 
         fclose(file);
     }else{
@@ -110,6 +129,58 @@ int main()
     }
 
    return 0;
+}
+
+void determineHandRank(player_t* player, int DECK_SIZE)
+{
+    // 1
+    // for(int i=0;i<DECK_SIZE;i++)
+    // {
+    //     if(player->hand[i] % SUIT_SIZE != 12)
+    //         player->rank += (player->hand[i] % SUIT_SIZE);
+    //     else
+    //         player->rank += 30;
+
+    // }
+
+    // 2
+    // for(int i=0;i<DECK_SIZE;i++)
+    // {
+    //     if(player->hand[i] % SUIT_SIZE == 12)
+    //         player->rank += 16;
+    //     else if(player->hand[i] % SUIT_SIZE == 11)
+    //         player->rank += 8;
+    //     else if(player->hand[i] % SUIT_SIZE == 10)
+    //         player->rank += 4;
+    //     else if(player->hand[i] % SUIT_SIZE == 9)
+    //         player->rank += 2;
+    //     else if(player->hand[i] % SUIT_SIZE == 8)
+    //         player->rank += 1;
+    // }
+
+    //3
+    short streak_len = 0;
+    for(int i=0;i<DECK_SIZE;i++)
+    {
+        if(player->hand[i] % SUIT_SIZE == 12)
+            player->rank += 16;
+        else if(player->hand[i] % SUIT_SIZE == 11)
+            player->rank += 8;
+        else if(player->hand[i] % SUIT_SIZE == 10)
+            player->rank += 4;
+        
+        if(player->hand[i] % SUIT_SIZE >= 9)
+        {
+            streak_len++;
+            if(streak_len > 1)
+            {
+                player->rank++;
+            }
+        }else{
+            streak_len = 0;
+        }
+    }
+
 }
 
 void initializeDeckWithRandomNumbers(int deck[], game_t* game)
@@ -143,21 +214,6 @@ void initializeDeckWithRandomNumbers(int deck[], game_t* game)
 
 void splitIntoTwoHands(int deck[],player_t* player1,player_t* player2, game_t* game)
 {
-    // player1->hand[0] = 10;
-    // player1->hand[1] = 11;
-    // player1->hand[2] = 9;
-    // player1->hand[3] = 5;
-    // player1->hand[4] = 9;
-    // player1->hand[5] = 12;
-    // player1->hand[6] = 13;
-    // player1->hand[7] = 13;
-    // player1->hand[8] = 13;
-    // player1->hand[9] = 13;
-    // player1->hand[10] = 13;
-    // player1->hand[11] = 13;
-
-    // player2->hand[0] = 10;
-
     for(int i=0;i<game->DECK_SIZE;i++)
     {
          if(i<game->DECK_SIZE/2)
@@ -176,21 +232,15 @@ void clearStacks(player_t* player1, player_t* player2, int DECK_SIZE)
     }
 }
 
-// void printHands(int hand1[],int hand2[])
-// {
-//     for(int i=0;i<DECK_SIZE;i++)
-//     {
-//         wprintf(L"%i",hand1[i]);
-//         wprintf(L" ");
-//     }
-//         wprintf(L"\n");
-//     for(int i=0;i<DECK_SIZE;i++)
-//     {
-//         wprintf(L"%i",hand2[i]);
-//         wprintf(L" ");
-//     }
-//         wprintf(L"\n");
-// }
+
+void clearHands(player_t* player1, player_t* player2, int DECK_SIZE)
+{
+    for(int i=0;i<DECK_SIZE;i++)
+    {
+        player1->hand[i] = EMPTY;
+        player2->hand[i] = EMPTY;
+    }
+}
 
 void playGame(player_t* player1,player_t* player2, game_t* game)
 {
@@ -226,10 +276,10 @@ void playGame(player_t* player1,player_t* player2, game_t* game)
             endGame(player1,game->moves);
             break;
         }
-        //zapętlenie
+        // w przypadku zapętlenia rozgrywki
         if(game->moves > 100000)
         {
-            game->moves = -1;
+            game->moves = INFINITY;
             break;
         }
     }
@@ -279,18 +329,20 @@ int war(player_t* player1, player_t* player2, game_t* game)
         if(player1->hand[0] == EMPTY || player2->hand[0] == EMPTY || player1->hand[1] == EMPTY || player2->hand[1] == EMPTY)
         {
             //wariant A
-            //return 0;
-
-            //wariant B
-            if(player_helped == false) //jeden z graczy może wspomóc drugiego tylko raz podczas wojnie
-            {
-                player_helped = true;
-                player_helped_in_this_turn = true;
-                variantBsplitCards(player1,player2,cards_in_war,game->DECK_SIZE);
-                game->moves += 2;
-                drawOutput(player1,player2,game->DECK_SIZE);
-            }else{
+            if(game->variant == A)
                 return 0;
+            else{
+                //wariant B
+                if(player_helped == false) //jeden z graczy może wspomóc drugiego tylko raz podczas wojnie
+                {
+                    player_helped = true;
+                    player_helped_in_this_turn = true;
+                    variantBsplitCards(player1,player2,cards_in_war,game->DECK_SIZE);
+                    game->moves += 2;
+                    drawOutput(player1,player2,game->DECK_SIZE);
+                }else{
+                    return 0;
+                }
             }
             
         }
@@ -399,6 +451,8 @@ void saveResults(player_t* player1, player_t* player2, game_t* game,FILE *file)
     fprintf(file, "%i,",game->DECK_SIZE);
     fprintf(file, "%i,",game->moves);
     fprintf(file, "%i,",game->variant);
+    fprintf(file, "%i,",player1->rank);
+    fprintf(file, "%i,",player2->rank);
     fprintf(file, "%i",player1->player_status == win);
     fprintf(file,"\n");
 
