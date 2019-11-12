@@ -3,6 +3,7 @@
 #define EMPTY -1
 #define SIMULATION_MODE 0
 #define INFINITY -1
+#define BUFFOR_SIZE 2
 
 typedef enum {
     playing,
@@ -24,6 +25,7 @@ typedef struct {
     int *hand;
     int rank;
     int *stack;
+    int *buffor;
     char *name;
     status_t player_status;
 } player_t;
@@ -37,11 +39,18 @@ typedef struct{
 
 void endGame(player_t* winner, int moves);
 
+void initializePlayer(player_t* player,game_t* game,char* name);
+
 void initializeDeckWithRandomNumbers(int deck[], game_t* game);
+
+void clearHands(player_t* player1, player_t* player2, int DECK_SIZE);
+void clearStacks(player_t* player1, player_t* player2, int DECK_SIZE);
 
 void splitIntoTwoHands(int deck[],player_t* player1,player_t* player2, game_t* game);
 
 void playGame(player_t* player1,player_t* player2, game_t* game);
+
+void playWiseTurn(player_t* you,player_t* opponent,player_t* player1,player_t* player2, game_t* game);
 
 void shiftCardLeft(int hand[], int steps, int DECK_SIZE);  //przesunięcie kart jednej talii o steps w lewo
 
@@ -51,9 +60,7 @@ void variantBsplitCards(player_t* player1, player_t* player2, int cards_in_war,i
 
 void giveCardsToWinner(player_t* winner, player_t* looser, short cards_in_war, int DECK_SIZE);
 
-void clearStacks(player_t* player1, player_t* player2, int DECK_SIZE);
-
-void clearHands(player_t* player1, player_t* player2, int DECK_SIZE);
+void clearArray(int array[], int size);
 
 void saveResults(player_t* player1, player_t* player2, game_t* game,FILE *file);
 

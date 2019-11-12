@@ -18,9 +18,7 @@ indeksy 39 ─ 51: pik, kolejno starszeństwem, 39 ─ dwójka pik ... 51 ─ as
 int main()
 {
     setlocale(LC_ALL, "");
-    srand(time(NULL));
-
-    
+    srand(time(NULL)); 
 
     game_t* game = malloc(sizeof(game_t));
 
@@ -43,34 +41,19 @@ int main()
         game->variant = A;
         game->moves = 0;
     }
-    
-    
 
     player_t* player1 = malloc(sizeof(player_t));
     player_t* player2 = malloc(sizeof(player_t));
 
-    player1->hand = (int *) malloc(game->DECK_SIZE * sizeof(int));
-    player1->stack = (int *) malloc(game->DECK_SIZE * sizeof(int));
-    player1->player_status = playing;
-    player1->name = "Gracz 1";
-    player1->rank = 0;
+    initializePlayer(player1, game, "Gracz 1");
+    initializePlayer(player2, game, "Gracz 2");
 
-    player2->hand = (int *) malloc(game->DECK_SIZE * sizeof(int));
-    player2->stack = (int *) malloc(game->DECK_SIZE * sizeof(int));   
-    player2->player_status = playing;
-    player2->name = "Gracz 2";
-    player2->rank = 0;
-
+    // clearStacks(player1,player2,game->DECK_SIZE);
+    // clearHands(player1,player2,game->DECK_SIZE);
 
     int *deck = (int *) malloc(game->DECK_SIZE * sizeof(int));
 
-    for(int i=0;i<game->DECK_SIZE;i++)
-    {
-        deck[i] = EMPTY;
-    }
-
-    clearHands(player1,player2,game->DECK_SIZE);
-    clearStacks(player1,player2,game->DECK_SIZE);
+    clearArray(deck,game->DECK_SIZE);
 
     initializeDeckWithRandomNumbers(deck, game);
 
@@ -96,8 +79,11 @@ int main()
 
         for(int i=1;i<2;i++)
         {
-            clearHands(player1, player2, game->DECK_SIZE);
-            clearStacks(player1, player2, game->DECK_SIZE);
+            clearArray(player1->hand,game->DECK_SIZE);
+            clearArray(player2->hand,game->DECK_SIZE);
+            clearArray(player1->stack,game->DECK_SIZE);
+            clearArray(player2->stack,game->DECK_SIZE);
+
             srand((int) time(NULL)/i);
             initializeDeckWithRandomNumbers(deck, game);
 
@@ -123,6 +109,20 @@ int main()
     }
 
    return 0;
+}
+
+void initializePlayer(player_t* player,game_t* game,char* name)
+{
+    player->hand = (int *) malloc(game->DECK_SIZE * sizeof(int));
+    player->stack = (int *) malloc(game->DECK_SIZE * sizeof(int));  
+    player->buffor = (int *) malloc(BUFFOR_SIZE * sizeof(int));
+    player->player_status = playing;
+    player->name = name;
+    player->rank = 0;
+
+    clearArray(player->hand,game->DECK_SIZE);
+    clearArray(player->stack,game->DECK_SIZE);
+    clearArray(player->buffor,BUFFOR_SIZE);
 }
 
 short startGame(game_t* game)
@@ -284,35 +284,55 @@ void splitIntoTwoHands(int deck[],player_t* player1,player_t* player2, game_t* g
     }
 }
 
-void clearStacks(player_t* player1, player_t* player2, int DECK_SIZE)
+void clearArray(int array[], int size)
 {
-    for(int i=0;i<DECK_SIZE;i++)
+    for(int i=0;i<size;i++)
     {
-        player1->stack[i] = EMPTY;
-        player2->stack[i] = EMPTY;
+        array[i] = EMPTY;
     }
 }
 
 
-void clearHands(player_t* player1, player_t* player2, int DECK_SIZE)
-{
-    for(int i=0;i<DECK_SIZE;i++)
-    {
-        player1->hand[i] = EMPTY;
-        player2->hand[i] = EMPTY;
-    }
-}
+// void clearHands(player_t* player1, player_t* player2, int DECK_SIZE)
+// {
+//     for(int i=0;i<DECK_SIZE;i++)
+//     {
+//         player1->hand[i] = EMPTY;
+//         player2->hand[i] = EMPTY;
+//     }
+// }
+
+// void clearStacks(player_t* player1, player_t* player2, int DECK_SIZE)
+// {
+//     for(int i=0;i<DECK_SIZE;i++)
+//     {
+//         player1->stack[i] = EMPTY;
+//         player2->stack[i] = EMPTY;
+//     }
+// }
 
 void playGame(player_t* player1,player_t* player2, game_t* game)
 {
     while(true)
     {
-        player1->stack[0] = player1->hand[0];
-        player2->stack[0] = player2->hand[0];
+
+        if(game->war_type == normal)
+        {
+            player1->stack[0] = player1->hand[0];
+            player2->stack[0] = player2->hand[0];
+            shiftCardLeft(player1->hand,1,game->DECK_SIZE);
+            shiftCardLeft(player2->hand,1,game->DECK_SIZE);
+            drawOutput(player1,player2,game);
+        }else{
+            if(game->moves % 2 == 0)
+                playWiseTurn(player1,player2,player1,player2,game);
+            else
+                playWiseTurn(player2,player1,player1,player2,game);
+            drawOutput(player1,player2,game);
+            getch();            
+        }
+
         game->moves++;
-        shiftCardLeft(player1->hand,1,game->DECK_SIZE);
-        shiftCardLeft(player2->hand,1,game->DECK_SIZE);
-        drawOutput(player1,player2,game->DECK_SIZE);
 
         if(player1->stack[0]%SUIT_SIZE > player2->stack[0]%SUIT_SIZE)
         {
@@ -323,6 +343,7 @@ void playGame(player_t* player1,player_t* player2, game_t* game)
         }else{
             war(player1,player2, game);
         }
+
         if(player1->hand[0] == EMPTY)
         {
             player1->player_status = defeat;
@@ -351,10 +372,82 @@ void endGame(player_t* winner, int moves)
     if(!SIMULATION_MODE)
     {
         clear();
-        mvprintw(LINES/2+5,COLS/2 - 8,"%s wygrał! Ilosc ruchow %i",winner->name, moves);    
+        mvprintw(LINES/2+5,COLS/2 - 12,"%s wygrał! Ilosc ruchow %i",winner->name, moves);    
         refresh();
         getchar();
     }
+}
+
+void playWiseTurn(player_t* you,player_t* opponent,player_t* player1,player_t* player2, game_t* game)
+{
+    if(opponent->buffor[0] != EMPTY || opponent->buffor[1] != EMPTY)
+    {
+        if(opponent->buffor[0] != EMPTY)
+        {
+            opponent->stack[0] = opponent->buffor[0];
+            opponent->buffor[0] = EMPTY;
+        }else{
+            opponent->stack[0] = opponent->buffor[1];
+            opponent->buffor[1] = EMPTY;
+        }
+    }else{
+        opponent->stack[0] = opponent->hand[0];
+        shiftCardLeft(opponent->hand,1,game->DECK_SIZE);
+
+    }
+
+    drawOutput(player1,player2,game);
+
+    if(you->buffor[0]==EMPTY && you->buffor[1] == EMPTY)
+    {
+        you->buffor[0] = you->hand[0];
+        you->buffor[1] = you->hand[1];
+        
+        shiftCardLeft(you->hand,2,game->DECK_SIZE);
+
+        drawOutput(player1,player2,game);
+
+        while(true)
+        {
+            int x = getch();
+            if(x == 'l'){
+                if(you == player2)
+                {
+                    you->stack[0] = you->buffor[0];
+                    you->buffor[0] = EMPTY;
+                }else{
+                    you->stack[0] = you->buffor[1];
+                    you->buffor[1] = EMPTY;
+                }
+                
+                //drawOutput(opponent,you,game);
+                break;
+            }
+            if(x == 'p'){
+                if(you == player2)
+                {
+                    you->stack[0] = you->buffor[1];
+                    you->buffor[1] = EMPTY;
+                }else{
+                    you->stack[0] = you->buffor[0];
+                    you->buffor[0] = EMPTY;
+                }
+                //drawOutput(opponent,you,game);                    
+                break;
+            }
+        }
+    }
+    // else{
+    //     if(you->buffor[0] != EMPTY)
+    //     {
+    //         you->stack[0] = you->buffor[0];
+    //         you->buffor[0] = EMPTY;
+    //     }else{
+    //         you->stack[0] = you->buffor[1];
+    //         you->buffor[1] = EMPTY;
+    //     }
+    // }
+    // drawOutput(opponent,you,game);
 }
 
 
@@ -400,7 +493,7 @@ int war(player_t* player1, player_t* player2, game_t* game)
                     player_helped_in_this_turn = true;
                     variantBsplitCards(player1,player2,cards_in_war,game->DECK_SIZE);
                     game->moves += 2;
-                    drawOutput(player1,player2,game->DECK_SIZE);
+                    drawOutput(player1,player2,game);
                 }else{
                     return 0;
                 }
@@ -411,17 +504,47 @@ int war(player_t* player1, player_t* player2, game_t* game)
         if(player_helped_in_this_turn == false)
         {
             //umieszczenie po 2 kart każdego gracza na stosie
-            player1->stack[cards_in_war - 2] = player1->hand[0];
-            player1->stack[cards_in_war - 1] = player1->hand[1];
+            if(player1->buffor[0] != EMPTY || player1->buffor[0] != EMPTY)
+            {
+                if(player1->buffor[0] != EMPTY)
+                {
+                    player1->stack[cards_in_war - 2] = player1->buffor[0];
+                    player1->buffor[0] = EMPTY;
+                    player1->stack[cards_in_war - 1] = player1->hand[0];
+                }else{
+                    player1->stack[cards_in_war - 2] = player1->buffor[1];
+                    player1->buffor[1] = EMPTY;
+                    player1->stack[cards_in_war - 1] = player1->hand[0];
+                }
+                shiftCardLeft(player1->hand,1,game->DECK_SIZE);
+            }else if(player2->buffor[0] != EMPTY || player2->buffor[0] != EMPTY)
+            {
+                if(player2->buffor[0] != EMPTY)
+                {
+                    player2->stack[cards_in_war - 2] = player2->buffor[0];
+                    player2->buffor[0] = EMPTY;
+                    player2->stack[cards_in_war - 1] = player2->hand[0];
+                }else{
+                    player2->stack[cards_in_war - 2] = player2->buffor[1];
+                    player2->buffor[1] = EMPTY;
+                    player2->stack[cards_in_war - 1] = player2->hand[0];
+                }
+                shiftCardLeft(player2->hand,1,game->DECK_SIZE);
+            }else{
+                player1->stack[cards_in_war - 2] = player1->hand[0];
+                player1->stack[cards_in_war - 1] = player1->hand[1];
 
-            player2->stack[cards_in_war - 2] = player2->hand[0];
-            player2->stack[cards_in_war - 1] = player2->hand[1];
+                player2->stack[cards_in_war - 2] = player2->hand[0];
+                player2->stack[cards_in_war - 1] = player2->hand[1];
+
+
+                shiftCardLeft(player1->hand,2,game->DECK_SIZE);
+                shiftCardLeft(player2->hand,2,game->DECK_SIZE);
+            }
 
             game->moves += 2;
-
-            shiftCardLeft(player1->hand,2,game->DECK_SIZE);
-            shiftCardLeft(player2->hand,2,game->DECK_SIZE);
-            drawOutput(player1,player2,game->DECK_SIZE);
+            
+            drawOutput(player1,player2,game);
         }
 
         if(player1->stack[cards_in_war - 1] %SUIT_SIZE > player2->stack[cards_in_war - 1] % SUIT_SIZE)
@@ -444,6 +567,7 @@ int war(player_t* player1, player_t* player2, game_t* game)
 
 void giveCardsToWinner(player_t* winner, player_t* looser, short cards_in_war, int DECK_SIZE)
 {
+    //TODO losowo dla gry w madra wojne
     for(int i=0;;i++)
     {
         if(winner->hand[i] == EMPTY)
@@ -457,7 +581,9 @@ void giveCardsToWinner(player_t* winner, player_t* looser, short cards_in_war, i
             {
                 winner->hand[i+cards_in_war+j] = looser->stack[j];
             }
-            clearStacks(looser,winner,DECK_SIZE);
+            clearArray(winner->stack,DECK_SIZE);
+            clearArray(looser->stack,DECK_SIZE);
+            // clearStacks(winner,looser,DECK_SIZE);
             break;
         }
     }
@@ -508,7 +634,6 @@ void variantBsplitCards(player_t* player1, player_t* player2, int cards_in_war,i
 
 void saveResults(player_t* player1, player_t* player2, game_t* game,FILE *file)
 {
-
     fprintf(file, "%i,",game->DECK_SIZE);
     fprintf(file, "%i,",game->moves);
     fprintf(file, "%i,",game->variant);
@@ -516,5 +641,4 @@ void saveResults(player_t* player1, player_t* player2, game_t* game,FILE *file)
     fprintf(file, "%i,",player2->rank);
     fprintf(file, "%i",player1->player_status == win);
     fprintf(file,"\n");
-
 }

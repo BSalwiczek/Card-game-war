@@ -23,7 +23,7 @@
 #define WIN_COLOR 1 
 #define DEFEAT_COLOR 2
 
-void drawOutput(player_t player1[],player_t player2[], int DECK_SIZE);
+void drawOutput(player_t* player1,player_t* player2, game_t* game);
 
 void drawCardsQueue(int y,int x,int hand[], int DECK_SIZE);
 

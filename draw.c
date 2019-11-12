@@ -1,22 +1,22 @@
 #include "draw.h"
 
-void drawOutput(player_t player1[],player_t player2[], int DECK_SIZE)
+void drawOutput(player_t* player1,player_t* player2, game_t* game)
 {
     if(!SIMULATION_MODE)
     {
         clear();
 
-        for(int i=0;i<DECK_SIZE;i++)
+        for(int i=0;i<game->DECK_SIZE;i++)
         {
-            if(player1->stack[i] == EMPTY)
+            if(player1->stack[i] == EMPTY && player2->stack[i] == EMPTY)
                 break;
 
             mvprintw(PLAYER1_POSITION_Y,PLAYER1_POSITION_X-7,"Gracz 1");
             mvprintw(PLAYER2_POSITION_Y,PLAYER2_POSITION_X,"Gracz 2");
             if(i%2 == 1 && i>0) 
             {
-                drawCard(LEFT_CARD_POSITION_Y+2*i,LEFT_CARD_POSITION_X,player1->stack[i],true,DEFAULT_COLOR); //false
-                drawCard(RIGHT_CARD_POSITION_Y+2*i,RIGHT_CARD_POSITION_X,player2->stack[i],true,DEFAULT_COLOR); //false
+                drawCard(LEFT_CARD_POSITION_Y+2*i,LEFT_CARD_POSITION_X,player1->stack[i],false,DEFAULT_COLOR);
+                drawCard(RIGHT_CARD_POSITION_Y+2*i,RIGHT_CARD_POSITION_X,player2->stack[i],false,DEFAULT_COLOR);
                 continue;
             }
 
@@ -33,14 +33,40 @@ void drawOutput(player_t player1[],player_t player2[], int DECK_SIZE)
             }
         }
 
-        drawCardsQueue(CARDS1_QUEUE_POSITION_Y,CARDS1_QUEUE_POSITION_X,player1->hand,DECK_SIZE);
-        drawCardsQueue(CARDS2_QUEUE_POSITION_Y,CARDS2_QUEUE_POSITION_X,player2->hand,DECK_SIZE);
+        drawCardsQueue(CARDS1_QUEUE_POSITION_Y,CARDS1_QUEUE_POSITION_X,player1->hand,game->DECK_SIZE);
+        drawCardsQueue(CARDS2_QUEUE_POSITION_Y,CARDS2_QUEUE_POSITION_X,player2->hand,game->DECK_SIZE);
         
+        if(game->war_type == wise)
+        {
+            // if(game->moves % 2 == 0)
+            // {
+                if(player2->buffor[0] != EMPTY)
+                    drawCard((int) LINES* 2/4,COLS/2+10, player2->buffor[0],true, DEFAULT_COLOR);
+                if(player2->buffor[1] != EMPTY)
+                    drawCard((int) LINES* 2/4,COLS/2+30, player2->buffor[1],true, DEFAULT_COLOR);
+                if(player2->buffor[0] != EMPTY && player2->buffor[1] != EMPTY)
+                    mvprintw((int) LINES* 2/4 + 10,COLS/2 + 9,"Wybierz kartę (l – lewa, p – prawa)");
 
-        mvprintw(LINES/2+5,COLS/2 - 22,"Naciśnij dowolny przycisk aby kontynuować");
+                if(player1->buffor[0] != EMPTY)
+                    drawCard((int) LINES* 2/4,COLS/2-10, player1->buffor[0],true, DEFAULT_COLOR);
+                if(player1->buffor[1] != EMPTY)
+                    drawCard((int) LINES* 2/4,COLS/2-30, player1->buffor[1],true, DEFAULT_COLOR);
+                if(player1->buffor[0] != EMPTY && player1->buffor[1] != EMPTY)
+                    mvprintw((int) LINES* 2/4 + 10,COLS/2 - 31,"Wybierz kartę (l – lewa, p – prawa)");
+
+                if(player1->stack[0] != EMPTY && player2->stack[0] != EMPTY)
+                    mvprintw(LINES/2+15,COLS/2 - 22,"Naciśnij dowolny przycisk aby kontynuować");
+
+            // }
+            
+        }else{
+            mvprintw(LINES/2+5,COLS/2 - 22,"Naciśnij dowolny przycisk aby kontynuować");
+            getchar();
+        }
+        
         refresh();
 
-        getchar();
+        
     }
 }
 
@@ -64,6 +90,8 @@ void drawCardsQueue(int y,int x,int hand[], int DECK_SIZE)
 
 void drawCard(int y,int x,int number, short show_card, short color)
 {
+    if(number == EMPTY)
+        return ;
     wchar_t *symbols[] = {L"\u2663",L"\u2666",L"\u2665",L"\u2660"}; //kolejno: trefl, karo, kier, pik
     const int symbol_id = (number/SUIT_SIZE)%4;
     char num_display;
