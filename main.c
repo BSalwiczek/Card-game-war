@@ -18,10 +18,11 @@ indeksy 39 ─ 51: pik, kolejno starszeństwem, 39 ─ dwójka pik ... 51 ─ as
 int main()
 {
     setlocale(LC_ALL, "");
-
     srand(time(NULL));
 
-    char str[3];
+    
+
+    game_t* game = malloc(sizeof(game_t));
 
     if(!SIMULATION_MODE)
     {
@@ -30,22 +31,20 @@ int main()
         cbreak();
         clear();
 
-        mvprintw(LINES/2,COLS/2-15,"Podaj rozmiar talii(max: 99): ");
-        refresh();
-        getnstr(str,sizeof(str)-1);
-        mvprintw(LINES/2+1,COLS/2-7,"%s",str);
-        refresh();
+        if(startGame(game) == 0)
+        {
+            clear();
+            endwin();
+            return 0;
+        }
+            
     }else{
-        str[0] = '5';
-        str[1] = '2';
-        str[2] = '\0';
+        game->DECK_SIZE = 20;
+        game->variant = A;
+        game->moves = 0;
     }
     
-
-    game_t* game = malloc(sizeof(game_t));
-    game->DECK_SIZE = atoi(str);
-    game->variant = B;
-    game->moves = 0;
+    
 
     player_t* player1 = malloc(sizeof(player_t));
     player_t* player2 = malloc(sizeof(player_t));
@@ -68,11 +67,10 @@ int main()
     for(int i=0;i<game->DECK_SIZE;i++)
     {
         deck[i] = EMPTY;
-        player1->hand[i] = EMPTY;
-        player2->hand[i] = EMPTY;
-        player1->stack[i] = EMPTY;
-        player2->stack[i] = EMPTY;
     }
+
+    clearHands(player1,player2,game->DECK_SIZE);
+    clearStacks(player1,player2,game->DECK_SIZE);
 
     initializeDeckWithRandomNumbers(deck, game);
 
@@ -80,8 +78,6 @@ int main()
 
     if(SIMULATION_MODE)
     {
-
-        game->DECK_SIZE = 52;
 
         printf("saving to file...\n");
         FILE *file;
@@ -98,10 +94,8 @@ int main()
         // fprintf(file, "Rank2,");
         // fprintf(file, "Winner\n");
 
-        for(int i=1;i<2001;i++)
+        for(int i=1;i<2;i++)
         {
-            player1->rank = 0;
-            player2->rank = 0;
             clearHands(player1, player2, game->DECK_SIZE);
             clearStacks(player1, player2, game->DECK_SIZE);
             srand((int) time(NULL)/i);
@@ -131,9 +125,76 @@ int main()
    return 0;
 }
 
+short startGame(game_t* game)
+{
+    drawMenu();
+    
+    while(true)
+    {
+        char x = getch();
+        if(x == '3')
+            return 0;
+        
+        if(x=='1')
+        {
+            game->war_type = normal;
+            break;
+        }
+        if(x=='2')
+        {
+            game->war_type = wise;
+            break;
+        }
+    }
+
+    char deck_size[3];
+
+    while(true)
+    {
+        clear();
+        mvprintw(LINES/2,COLS/2-15,"Podaj rozmiar talii(max: 52): ");
+        refresh();
+        getnstr(deck_size,sizeof(deck_size)-1);
+
+        if(atoi(deck_size) <= 52)
+            break;
+    }
+    
+    game->DECK_SIZE = atoi(deck_size);
+
+    char variant[1];
+
+    if(game->war_type == normal)
+    {
+        while(true)
+        {
+            clear();
+            mvprintw(LINES/2,COLS/2-15,"Wybierz wariant (A lub B): ");
+            refresh();
+            getnstr(variant,sizeof(variant));
+            if(variant[0] == 'A' || variant[0] == 'a')
+            {
+                game->variant = A;
+                break;
+            }else if(variant[0] == 'B' || variant[0] == 'b')
+            {
+                game->variant = B;
+                break;
+            }
+        }
+    }else{
+        game->variant = A;
+    }
+    
+    game->moves = 0;
+    
+    return 1;
+}
+
+
 void determineHandRank(player_t* player, int DECK_SIZE)
 {
-    // 1
+    // Simulation 1
     // for(int i=0;i<DECK_SIZE;i++)
     // {
     //     if(player->hand[i] % SUIT_SIZE != 12)
@@ -143,7 +204,7 @@ void determineHandRank(player_t* player, int DECK_SIZE)
 
     // }
 
-    // 2
+    // Simulation 2
     // for(int i=0;i<DECK_SIZE;i++)
     // {
     //     if(player->hand[i] % SUIT_SIZE == 12)
@@ -158,7 +219,7 @@ void determineHandRank(player_t* player, int DECK_SIZE)
     //         player->rank += 1;
     // }
 
-    //3
+    // Simulation 3
     short streak_len = 0;
     for(int i=0;i<DECK_SIZE;i++)
     {

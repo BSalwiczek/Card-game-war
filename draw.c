@@ -130,3 +130,12 @@ void determineNumber(int number,char *num_display)
             *num_display = number%SUIT_SIZE + 2 + '0';
     }
 }
+
+void drawMenu()
+{
+    clear();
+    mvprintw(LINES/2-3,COLS/2-10,"[1] Gra w wojnę");
+    mvprintw(LINES/2,COLS/2-10,"[2] Gra w mądrą wojnę");
+    mvprintw(LINES/2+3,COLS/2-10,"[3] Wyjście");
+    refresh();
+}
