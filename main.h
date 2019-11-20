@@ -16,6 +16,12 @@ typedef enum {
     B
 } variant_t;
 
+typedef enum {
+    random_choice,
+    furious,
+    peaceful
+} strategy_t;
+
 typedef enum{
     normal,
     wise
@@ -28,6 +34,7 @@ typedef struct {
     int *buffor;
     char *name;
     status_t player_status;
+    strategy_t strategy;
 } player_t;
 
 typedef struct{
@@ -43,9 +50,6 @@ void initializePlayer(player_t* player,game_t* game,char* name);
 
 void initializeDeckWithRandomNumbers(int deck[], game_t* game);
 
-void clearHands(player_t* player1, player_t* player2, int DECK_SIZE);
-void clearStacks(player_t* player1, player_t* player2, int DECK_SIZE);
-
 void splitIntoTwoHands(int deck[],player_t* player1,player_t* player2, game_t* game);
 
 void playGame(player_t* player1,player_t* player2, game_t* game);
@@ -58,12 +62,14 @@ int war(player_t* player1, player_t* player2, game_t* game);
 
 void variantBsplitCards(player_t* player1, player_t* player2, int cards_in_war,int DECK_SIZE);
 
-void giveCardsToWinner(player_t* winner, player_t* looser, short cards_in_war, int DECK_SIZE);
+void giveCardsToWinner(player_t* winner, player_t* looser, short cards_in_war, int DECK_SIZE, war_type_t war_type);
 
 void clearArray(int array[], int size);
 
 void saveResults(player_t* player1, player_t* player2, game_t* game,FILE *file);
 
 void determineHandRank(player_t* player, int DECK_SIZE);
+
+char chooseCard(player_t* you, int opponent_stack[], player_t* player2);
 
 short startGame(game_t* game);
