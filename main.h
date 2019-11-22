@@ -1,7 +1,19 @@
+#ifndef MAIN_H
+#define MAIN_H
+
+#include <stdio.h>
+#include <stdlib.h> 
+#include <string.h>
+#include <locale.h>
+#include <wchar.h>
+#include <time.h>
+#include <ncursesw/ncurses.h>
+
+// #define SIMULATION_MODE
+
 #define SHUFFLE_SIZE 1000 //wyznacza ile ma zostać wykonanych zamienień w talii
 #define SUIT_SIZE 13
 #define EMPTY -1
-#define SIMULATION_MODE 0
 #define INFINITY -1
 #define BUFFOR_SIZE 2
 
@@ -19,13 +31,19 @@ typedef enum {
 typedef enum {
     random_choice,
     furious,
-    peaceful
+    peaceful,
+    none
 } strategy_t;
 
 typedef enum{
     normal,
     wise
 } war_type_t;
+
+typedef enum{
+    singleplayer,
+    multiplayer
+} game_mode_t;
 
 typedef struct {
     int *hand;
@@ -42,6 +60,7 @@ typedef struct{
     int moves;
     variant_t variant;
     war_type_t war_type;
+    game_mode_t mode;
 } game_t;
 
 void endGame(player_t* winner, int moves);
@@ -72,4 +91,8 @@ void determineHandRank(player_t* player, int DECK_SIZE);
 
 char chooseCard(player_t* you, int opponent_stack[], player_t* player2);
 
+char tacticalChose(player_t* you, int opponent_stack[], player_t* player2);
+
 short startGame(game_t* game);
+
+#endif

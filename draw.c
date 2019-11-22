@@ -2,8 +2,8 @@
 
 void drawOutput(player_t* player1,player_t* player2, game_t* game)
 {
-    if(!SIMULATION_MODE)
-    {
+    #ifndef SIMULATION_MODE
+
         clear();
 
         for(int i=0;i<game->DECK_SIZE;i++)
@@ -33,24 +33,33 @@ void drawOutput(player_t* player1,player_t* player2, game_t* game)
             }
         }
 
-        drawCardsQueue(CARDS1_QUEUE_POSITION_Y,CARDS1_QUEUE_POSITION_X,player1->hand,game->DECK_SIZE);
-        drawCardsQueue(CARDS2_QUEUE_POSITION_Y,CARDS2_QUEUE_POSITION_X,player2->hand,game->DECK_SIZE);
+        if(player1->strategy == none)
+            drawCardsQueue(CARDS1_QUEUE_POSITION_Y,CARDS1_QUEUE_POSITION_X,player1->hand,game->DECK_SIZE);
+        if(player2->strategy == none)
+            drawCardsQueue(CARDS2_QUEUE_POSITION_Y,CARDS2_QUEUE_POSITION_X,player2->hand,game->DECK_SIZE);
         
         if(game->war_type == wise)
         {
             // if(game->moves % 2 == 0)
             // {
+                short showPlayer1Card = true;
+                short showPlayer2Card = true;
+                if(player1->strategy != none)
+                    showPlayer1Card = false;
+                if(player2->strategy != none)
+                    showPlayer2Card = false;
+
                 if(player2->buffor[0] != EMPTY)
-                    drawCard((int) LINES* 2/4,COLS/2+10, player2->buffor[0],true, DEFAULT_COLOR);
+                    drawCard((int) LINES* 2/4,COLS/2+10, player2->buffor[0],showPlayer2Card, DEFAULT_COLOR);
                 if(player2->buffor[1] != EMPTY)
-                    drawCard((int) LINES* 2/4,COLS/2+30, player2->buffor[1],true, DEFAULT_COLOR);
+                    drawCard((int) LINES* 2/4,COLS/2+30, player2->buffor[1],showPlayer2Card, DEFAULT_COLOR);
                 if(player2->buffor[0] != EMPTY && player2->buffor[1] != EMPTY)
                     mvprintw((int) LINES* 2/4 + 10,COLS/2 + 9,"Wybierz kartę (l – lewa, p – prawa)");
 
                 if(player1->buffor[0] != EMPTY)
-                    drawCard((int) LINES* 2/4,COLS/2-10, player1->buffor[0],true, DEFAULT_COLOR);
+                    drawCard((int) LINES* 2/4,COLS/2-10, player1->buffor[0],showPlayer1Card, DEFAULT_COLOR);
                 if(player1->buffor[1] != EMPTY)
-                    drawCard((int) LINES* 2/4,COLS/2-30, player1->buffor[1],true, DEFAULT_COLOR);
+                    drawCard((int) LINES* 2/4,COLS/2-30, player1->buffor[1],showPlayer1Card, DEFAULT_COLOR);
                 if(player1->buffor[0] != EMPTY && player1->buffor[1] != EMPTY)
                     mvprintw((int) LINES* 2/4 + 10,COLS/2 - 31,"Wybierz kartę (l – lewa, p – prawa)");
 
@@ -67,7 +76,7 @@ void drawOutput(player_t* player1,player_t* player2, game_t* game)
         refresh();
 
         
-    }
+    #endif
 }
 
 void drawCardsQueue(int y,int x,int hand[], int DECK_SIZE)
@@ -106,7 +115,9 @@ void drawCard(int y,int x,int number, short show_card, short color)
         mvaddwstr(y+3,x,L"│##########│");
         mvaddwstr(y+4,x,L"│##########│");
         mvaddwstr(y+5,x,L"│##########│");
-        mvaddwstr(y+6,x,L"└──────────┘");
+        mvaddwstr(y+6,x,L"│##########│");
+        mvaddwstr(y+7,x,L"│##########│");
+        mvaddwstr(y+8,x,L"└──────────┘");
     }else{
         start_color();   
         init_pair(DEFEAT_COLOR,COLOR_RED,COLOR_BLACK);
@@ -161,12 +172,22 @@ void determineNumber(int number,char *num_display)
 
 void drawMenu()
 {
-    if(!SIMULATION_MODE)
-    {
+    #ifndef SIMULATION_MODE
         clear();
         mvprintw(LINES/2-3,COLS/2-10,"[1] Gra w wojnę");
         mvprintw(LINES/2,COLS/2-10,"[2] Gra w mądrą wojnę");
         mvprintw(LINES/2+3,COLS/2-10,"[3] Wyjście");
         refresh();
-    }
+    #endif
+}
+
+void drawModesMenu()
+{
+    #ifndef SIMULATION_MODE
+        clear();
+        mvprintw(LINES/2-3,COLS/2-10,"Wybierz tryb");
+        mvprintw(LINES/2,COLS/2-10,"[1] 2 graczy");
+        mvprintw(LINES/2+3,COLS/2-10,"[2] gracz vs komputer");
+        refresh();
+    #endif
 }

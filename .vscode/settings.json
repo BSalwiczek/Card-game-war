@@ -2,6 +2,7 @@
     "files.associations": {
         "ncurses.h": "c",
         "draw.h": "c",
-        "sstream": "c"
+        "sstream": "c",
+        "stdio.h": "c"
     }
 }

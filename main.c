@@ -1,10 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h> 
-#include <string.h>
-#include <locale.h>
-#include <wchar.h>
-#include <time.h>
-#include <ncursesw/ncurses.h>
 #include "main.h"
 
 /*
@@ -22,8 +15,7 @@ int main()
 
     game_t* game = malloc(sizeof(game_t));
 
-    if(!SIMULATION_MODE)
-    {
+    #ifndef SIMULATION_MODE
         //inicjalizacja ncurses
         initscr();
         cbreak();
@@ -35,19 +27,25 @@ int main()
             endwin();
             return 0;
         }
-            
-    }else{
+    #else
         game->DECK_SIZE = 52;
         game->variant = A;
         game->moves = 0;
         game->war_type = wise;
-    }
+
+    #endif
 
     player_t* player1 = malloc(sizeof(player_t));
     player_t* player2 = malloc(sizeof(player_t));
 
-    initializePlayer(player1, game, "Gracz 1");
-    initializePlayer(player2, game, "Gracz 2");
+    if(game->mode == multiplayer){
+        initializePlayer(player1, game, "Komputer");
+        initializePlayer(player2, game, "Ty");
+        player1->strategy = furious;
+    }else{
+        initializePlayer(player2, game, "Gracz 2");
+        initializePlayer(player1, game, "Gracz 1");
+    }
 
     int *deck = (int *) malloc(game->DECK_SIZE * sizeof(int));
 
@@ -57,29 +55,30 @@ int main()
 
     splitIntoTwoHands(deck,player1,player2, game);
 
-    player1->strategy = furious;
-    player2->strategy = furious;
+    #ifdef SIMULATION_MODE
+        player1->strategy = peaceful;
+        player2->strategy = peaceful;
 
-    if(SIMULATION_MODE)
-    {
         FILE *file;
-        file = fopen("run/Problem 1 - madra wojna/wyniki2.txt","a");
+        file = fopen("run/Problem 2 - madra wojna/pvsp2.txt","a");
         if(file == NULL){
             printf("Otwarcie pliku nie powiodło sie\n");
             return 0;
         }
         printf("saving to file...\n");
 
-        // fprintf(file, "Deck size,");
-        // fprintf(file, "Moves,");
+        fprintf(file, "Deck size,");
+        fprintf(file, "Moves,");
+        fprintf(file, "Player1Strategy,");
+        fprintf(file, "Player2Strategy,");
         // fprintf(file, "Variant,");
         // fprintf(file, "Rank1,");
         // fprintf(file, "Rank2,");
-        // fprintf(file, "Winner\n");
-
+        fprintf(file, "Winner\n");
 
         for(int i=1;i<1001;i++)
         {
+            printf("%i \n",i);
             clearArray(player1->hand,game->DECK_SIZE);
             clearArray(player2->hand,game->DECK_SIZE);
             clearArray(player1->stack,game->DECK_SIZE);
@@ -100,14 +99,12 @@ int main()
             player1->rank = 0;
             player2->rank = 0;
         }
-        
-
         fclose(file);
-    }else{
+
+    #else
         playGame(player1,player2, game);
-        getch();
         endwin();
-    }
+    #endif
 
     free(game);
     free(player1);
@@ -124,6 +121,7 @@ void initializePlayer(player_t* player,game_t* game,char* name)
     player->player_status = playing;
     player->name = name;
     player->rank = 0;
+    player->strategy = none;
 
     clearArray(player->hand,game->DECK_SIZE);
     clearArray(player->stack,game->DECK_SIZE);
@@ -167,34 +165,52 @@ short startGame(game_t* game)
     
     game->DECK_SIZE = atoi(deck_size);
 
-    char variant[1];
+    
 
     if(game->war_type == normal)
     {
+        
         while(true)
         {
             clear();
             mvprintw(LINES/2,COLS/2-15,"Wybierz wariant (A lub B): ");
             refresh();
-            getnstr(variant,sizeof(variant));
-            if(variant[0] == 'A' || variant[0] == 'a')
+            char variant = getch();
+            if(variant == 'A' || variant == 'a')
             {
                 game->variant = A;
                 break;
-            }else if(variant[0] == 'B' || variant[0] == 'b')
+            }else if(variant == 'B' || variant == 'b')
             {
                 game->variant = B;
                 break;
             }
         }
+        game->mode = multiplayer;
     }else
+    {
+        while(true)
+        {
+            drawModesMenu();
+            char mode = getch();
+            if(mode == '1')
+            {
+                game->mode = singleplayer;
+                break;
+            }else if(mode == '2')
+            {
+                game->mode = multiplayer;
+                break;
+            }
+        }
         game->variant = A;
+    }
+        
     
     game->moves = 0;
     
     return 1;
 }
-
 
 void determineHandRank(player_t* player, int DECK_SIZE)
 {
@@ -248,11 +264,6 @@ void determineHandRank(player_t* player, int DECK_SIZE)
 
 void initializeDeckWithRandomNumbers(int deck[], game_t* game)
 {
-    // for(int i=0;i<game.DECK_SIZE;i++)
-    // {
-    //     deck[i] = i+1;
-    // }
-
     static int seed = 1;
     (seed > 10000) ? seed=1 : seed++;
     srand(time(NULL)/seed); 
@@ -316,8 +327,9 @@ void playGame(player_t* player1,player_t* player2, game_t* game)
             else
                 playWiseTurn(player2,player1,player1,player2,game);
             drawOutput(player1,player2,game);
-            if(!SIMULATION_MODE)
-                getch();            
+            #ifndef SIMULATION_MODE
+                getch();
+            #endif            
         }
 
         game->moves++;
@@ -344,7 +356,7 @@ void playGame(player_t* player1,player_t* player2, game_t* game)
             break;
         }
         // w przypadku zapętlenia rozgrywki
-        if(game->moves > 100000)
+        if(game->moves > 1000000)
         {
             game->moves = INFINITY;
             break;
@@ -354,13 +366,12 @@ void playGame(player_t* player1,player_t* player2, game_t* game)
 
 void endGame(player_t* winner, int moves)
 {
-    if(!SIMULATION_MODE)
-    {
+    #ifndef SIMULATION_MODE
         clear();
         mvprintw(LINES/2+5,COLS/2 - 12,"%s wygrał! Ilosc ruchow %i",winner->name, moves);    
         refresh();
-        getchar();
-    }
+        getch();
+    #endif
 }
 
 void playWiseTurn(player_t* you,player_t* opponent,player_t* player1,player_t* player2, game_t* game)
@@ -429,79 +440,108 @@ void playWiseTurn(player_t* you,player_t* opponent,player_t* player1,player_t* p
 
 char chooseCard(player_t* you, int opponent_stack[], player_t* player2)
 {
-    char card;
-    if(SIMULATION_MODE)
+    if(you->strategy == none)
     {
         while(true)
         {
+            char card;
             card = getch();
             if(card == 'l' || card=='p'){
                 return card;
             }
         }
-    }else
-    {
+    }else{
         static int seed = 1;
         (seed > 10000) ? seed=1 : seed++;
         srand(time(NULL)/seed);
+
+        char left, right;
+        if(you == player2)
+        {
+            left = 'l';
+            right = 'p';
+        }else{ //przeciwnie dla gracza po lewej 
+            left = 'p';
+            right = 'l';
+        }
+
+        int opponent_card = opponent_stack[0]%SUIT_SIZE;
+        int left_card = you->buffor[0]%SUIT_SIZE;
+        int right_card = you->buffor[1]%SUIT_SIZE;
 
         //random
         if(you->strategy == random_choice)
         {
             if((int)rand()%2 == 0)
-                card = 'l';
+                return left;
             else
-                card = 'p';
+                return right;
         }else if(you->strategy == furious)
         {
-            char left, right;
-            if(you == player2)
-            {
-                left = 'l';
-                right = 'p';
-            }else{ //przeciwnie dla gracza po lewej 
-                left = 'p';
-                right = 'l';
-            }
             
             //jeśli może być wojna to trzeba do niej doprowadzić
-            if(opponent_stack[0]%SUIT_SIZE == you->buffor[0]%SUIT_SIZE)
+            if(opponent_card == left_card)
                 return left;
-            if(opponent_stack[0]%SUIT_SIZE == you->buffor[1]%SUIT_SIZE)
+            if(opponent_card == right_card)
                 return right;
 
             //skoro nie może być wojny postaraj się przebić młodszą kartą
-            if(opponent_stack[0]%SUIT_SIZE < you->buffor[0]%SUIT_SIZE && (you->buffor[0]%SUIT_SIZE < you->buffor[1]%SUIT_SIZE))
-                return left;
-            else if(opponent_stack[0]%SUIT_SIZE < you->buffor[0]%SUIT_SIZE &&(opponent_stack[0]%SUIT_SIZE > you->buffor[1]%SUIT_SIZE))
-                return left;
-
-            if(opponent_stack[0]%SUIT_SIZE < you->buffor[1]%SUIT_SIZE && (you->buffor[1]%SUIT_SIZE < you->buffor[0]%SUIT_SIZE))
-                return right;
-            else if(opponent_stack[0]%SUIT_SIZE < you->buffor[1]%SUIT_SIZE && (opponent_stack[1]%SUIT_SIZE > you->buffor[0]%SUIT_SIZE))
-                return right;
+            if(opponent_card < left_card)
+            {
+                if(left_card < right_card)
+                    return left;
+                if(opponent_card > right_card)
+                    return left;
+            }
+            if(opponent_card < right_card)
+            {
+                if(right_card < left_card)
+                    return right;
+                if(opponent_card > left_card)
+                    return right;
+            }
             
             //jeśli obie karty są zbyt słabe by wygrać połóż młodszą 
-            if(you->buffor[0]%SUIT_SIZE > you->buffor[1]%SUIT_SIZE)
+            if(left_card > right_card)
                 return right;
             else
                 return left;
-
-
-
             
         }else if(you->strategy == peaceful)
         {
+            //jeśli może być wojna to to do niej nie doprowadź
+            if(opponent_card == left_card)
+                return right;
+            if(opponent_card == right_card)
+                return left;
 
+            //skoro nie może być wojny postaraj nie przebijać
+            if(opponent_card > left_card && opponent_card > right_card)
+            {
+                if((int)rand()%2 == 0)
+                    return left;
+                else
+                    return right;
+            }else if(opponent_card > left_card)
+                return left;
+            else if(opponent_card > right_card)
+                return right;
+
+            //jeśli musisz przebić zrób to słabszą kartą
+            if(left_card < right_card)
+                return left;
+            else
+                return right;
         }
-        
-        return card;
     }
 
      
 }
 
-
+char tacticalChose(player_t* you, int opponent_stack[], player_t* player2)
+{
+    
+}
 
 void shiftCardLeft(int hand[], int steps, int DECK_SIZE)  //przesunięcie kart talii o steps w lewo
 {
@@ -572,7 +612,8 @@ int war(player_t* player1, player_t* player2, game_t* game)
 
                 if(player1->hand[0] == EMPTY){
                     drawOutput(player1,player2,game);
-                    getch();
+                    if(game->war_type == wise)
+                        getch();
                     return 0;
                 }
                 player1->stack[cards_in_war - 1] = player1->hand[0];
@@ -595,7 +636,8 @@ int war(player_t* player1, player_t* player2, game_t* game)
 
                 if(player2->hand[0] == EMPTY){
                     drawOutput(player1,player2,game);
-                    getch();
+                    if(game->war_type == wise)
+                        getch();
                     return 0;
                 }
                 player2->stack[cards_in_war - 1] = player2->hand[0];
@@ -615,7 +657,8 @@ int war(player_t* player1, player_t* player2, game_t* game)
             game->moves += 2;
             
             drawOutput(player1,player2,game);
-            getch();
+            if(game->war_type == wise)
+                getch();
         }
 
         if(player1->stack[cards_in_war - 1] %SUIT_SIZE > player2->stack[cards_in_war - 1] % SUIT_SIZE)
@@ -642,21 +685,26 @@ void giveCardsToWinner(player_t* winner, player_t* looser, short cards_in_war, i
         int index1,index2,copy;
         static int seed = 1;
         (seed > 10000) ? seed=1 : seed++;
-        srand(time(NULL)/seed); 
-        for(int i=0;i<SHUFFLE_SIZE;i++)
+        srand(time(NULL)/seed);
+        if(cards_in_war == 1)
         {
-            index1 = rand() % cards_in_war;
-            index2 = rand() % cards_in_war;
-            copy = winner->stack[index1];
-            winner->stack[index1] = winner->stack[index2];
-            winner->stack[index2] = copy;
-
-            index1 = rand() % cards_in_war;
-            index2 = rand() % cards_in_war;
-            copy = looser->stack[index1];
-            looser->stack[index1] = looser->stack[index2];
-            looser->stack[index2] = copy;
+            if(rand() % 2 == 0)
+            {
+                copy = winner->stack[0];
+                winner->stack[0] = looser->stack[0];
+                looser->stack[0] = copy;
+            }
+        }else{
+            for(int i=0;i<SHUFFLE_SIZE;i++)
+            {
+                index1 = rand() % cards_in_war;
+                index2 = rand() % cards_in_war;
+                copy = winner->stack[index2];
+                winner->stack[index2] = looser->stack[index1];
+                looser->stack[index1] = copy;
+            }
         }
+        
     }
 
     for(int i=0;;i++)
@@ -729,6 +777,8 @@ void saveResults(player_t* player1, player_t* player2, game_t* game,FILE *file)
     // fprintf(file, "%i,",game->variant);
     // fprintf(file, "%i,",player1->rank);
     // fprintf(file, "%i,",player2->rank);
+    fprintf(file, "%i,",player1->strategy);
+    fprintf(file, "%i,",player2->strategy);
     fprintf(file, "%i",player1->player_status == win);
     fprintf(file,"\n");
 

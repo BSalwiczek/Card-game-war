@@ -1,6 +1,6 @@
-#include <stdio.h>
-#include <wchar.h>
-#include <ncursesw/ncurses.h>
+#ifndef DRAW_H
+#define DRAW_H
+
 #include "main.h"
 
 #define LEFT_CARD_POSITION_X (COLS-1)/2-COLS/11-12
@@ -32,3 +32,7 @@ void drawCard(int y,int x,int number, short show_card, short color);
 void determineNumber(int number,char *num_display);
 
 void drawMenu();
+
+void drawModesMenu();
+
+#endif
