@@ -38,7 +38,7 @@ int main()
     player_t* player1 = malloc(sizeof(player_t));
     player_t* player2 = malloc(sizeof(player_t));
 
-    if(game->mode == multiplayer){
+    if(game->mode == singleplayer){
         initializePlayer(player1, game, "Komputer");
         initializePlayer(player2, game, "Ty");
         player1->strategy = furious;
@@ -195,11 +195,11 @@ short startGame(game_t* game)
             char mode = getch();
             if(mode == '1')
             {
-                game->mode = singleplayer;
+                game->mode = multiplayer;
                 break;
             }else if(mode == '2')
             {
-                game->mode = multiplayer;
+                game->mode = singleplayer;
                 break;
             }
         }
@@ -751,20 +751,20 @@ void variantBsplitCards(player_t* player1, player_t* player2, int cards_in_war,i
 
     if(player2->hand[0] == EMPTY)
     {
-        player2->stack[cards_in_war - 2] = player1->hand[0];
-        player2->stack[cards_in_war - 1] = player1->hand[1];
-
         player1->stack[cards_in_war - 2] = player1->hand[2];
         player1->stack[cards_in_war - 1] = player1->hand[3];
 
+        player2->stack[cards_in_war - 2] = player1->hand[0];
+        player2->stack[cards_in_war - 1] = player1->hand[1];
         shiftCardLeft(player1->hand,4,DECK_SIZE);
     }else if(player2->hand[1] == EMPTY)
     {
-        player2->stack[cards_in_war - 2] = player2->hand[0];
-        player2->stack[cards_in_war - 1] = player1->hand[1];
-        
         player1->stack[cards_in_war - 2] = player1->hand[0];
         player1->stack[cards_in_war - 1] = player1->hand[2];
+        
+        player2->stack[cards_in_war - 2] = player2->hand[0];
+        player2->stack[cards_in_war - 1] = player1->hand[1];
+    
         shiftCardLeft(player2->hand,1,DECK_SIZE);
         shiftCardLeft(player1->hand,3,DECK_SIZE);
     }
