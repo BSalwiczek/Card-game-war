@@ -999,3 +999,7 @@ Deck size,Moves,Player1Strategy,Player2Strategy,Winner
 52,-1,2,2,0
 52,460,2,2,0
 52,-1,2,2,0
+Deck size,Moves,Player1Strategy,Player2Strategy,Winner
+52,26,2,2,1
+Deck size,Moves,Player1Strategy,Player2Strategy,Winner
+52,26,2,2,1

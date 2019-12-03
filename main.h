@@ -9,6 +9,8 @@
 #include <time.h>
 #include <ncursesw/ncurses.h>
 
+
+
 // #define SIMULATION_MODE
 
 #define SHUFFLE_SIZE 1000 //wyznacza ile ma zostać wykonanych zamienień w talii
@@ -45,54 +47,69 @@ typedef enum{
     multiplayer
 } game_mode_t;
 
+typedef enum{
+    empty,
+    clubs, //trefl
+    diamonds, //karo
+    hearts, //kier
+    pikes, //pik
+} suit_t;
+
+typedef struct{
+    int number;
+    suit_t suit;
+} card_t;
+
 typedef struct {
-    int *hand;
     int rank;
-    int *stack;
-    int *buffor;
-    char *name;
+    const char *name;
+    card_t *hand;
+    card_t *stack;
+    card_t *buffor;
     status_t player_status;
     strategy_t strategy;
 } player_t;
 
 typedef struct{
-    int DECK_SIZE;
+    int deck_size;
     int moves;
     variant_t variant;
     war_type_t war_type;
     game_mode_t mode;
 } game_t;
 
-void endGame(player_t* winner, int moves);
+void initializePlayer(player_t* const player, const int deck_size,const char* name);
 
-void initializePlayer(player_t* player,game_t* game,char* name);
+short startGame(game_t* const game);
 
-void initializeDeckWithRandomNumbers(int deck[], game_t* game);
+void endGame(const player_t* const winner, const int moves);
 
-void splitIntoTwoHands(int deck[],player_t* player1,player_t* player2, game_t* game);
+void initializeDeckWithRandomNumbers(card_t* const deck, const int deck_size);
 
-void playGame(player_t* player1,player_t* player2, game_t* game);
+void splitIntoTwoHands(const card_t* const deck,player_t* const player1,player_t* const player2, const int deck_size);
 
-void playWiseTurn(player_t* you,player_t* opponent,player_t* player1,player_t* player2, game_t* game);
+void playGame(player_t* const player1,player_t* const player2, game_t* const game);
 
-void shiftCardLeft(int hand[], int steps, int DECK_SIZE);  //przesunięcie kart jednej talii o steps w lewo
+void playWiseTurn(player_t* const you,player_t* const opponent,player_t* const player1,player_t* const player2, game_t* const game);
 
-int war(player_t* player1, player_t* player2, game_t* game);
+void shiftCardLeft(card_t* const hand, const int steps, const int deck_size);  //przesunięcie kart jednej talii o steps w lewo
 
-void variantBsplitCards(player_t* player1, player_t* player2, int cards_in_war,int DECK_SIZE);
+int war(player_t* const player1, player_t* const player2, game_t* const game);
 
-void giveCardsToWinner(player_t* winner, player_t* looser, short cards_in_war, int DECK_SIZE, war_type_t war_type);
+int putCardsOnStackWise(player_t* const chooser, player_t* const other, game_t* const game, const int cards_in_war); //umieszcza karty do wyboru na stacku gracza
 
-void clearArray(int array[], int size);
+void variantBsplitCards(player_t* const player1, player_t* const player2, const int cards_in_war, const int deck_size);
 
-void saveResults(player_t* player1, player_t* player2, game_t* game,FILE *file);
+void giveCardsToWinner(player_t* const winner, player_t* const looser, const short cards_in_war, const int deck_size, const war_type_t war_type);
 
-void determineHandRank(player_t* player, int DECK_SIZE);
+void clearCards(card_t* const cards, const int size);
 
-char chooseCard(player_t* you, int opponent_stack[], player_t* player2);
+void clearCard(card_t* const card);
 
-char tacticalChose(player_t* you, int opponent_stack[], player_t* player2);
+void saveResults(const player_t* const player1, const player_t* const player2, const game_t* const game,FILE* const file);
 
-short startGame(game_t* game);
+void determineHandRank(player_t* const player, const int DECK_SIZE);
+
+char chooseCard(const player_t* const you, const card_t* const opponent_stack, const player_t* const player2);
 
 #endif

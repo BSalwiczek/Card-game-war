@@ -14,22 +14,24 @@
 #define PLAYER2_POSITION_X (COLS-1)/2 + COLS/10
 #define PLAYER2_POSITION_Y 3
 
-#define CARDS1_QUEUE_POSITION_X (COLS-1)/2 - COLS/5
+#define CARDS1_QUEUE_POSITION_X (COLS-1)/2 - COLS/4
 #define CARDS1_QUEUE_POSITION_Y 3
-#define CARDS2_QUEUE_POSITION_X (COLS-1)/2 + COLS/5
+#define CARDS2_QUEUE_POSITION_X (COLS-1)/2 + COLS/4
 #define CARDS2_QUEUE_POSITION_Y 3
 
 #define DEFAULT_COLOR 0
 #define WIN_COLOR 1 
 #define DEFEAT_COLOR 2
 
-void drawOutput(player_t* player1,player_t* player2, game_t* game);
+void drawOutput(const player_t* const player1,const player_t* const player2, const game_t* const game);
 
-void drawCardsQueue(int y,int x,int hand[], int DECK_SIZE);
+void drawCardsQueue(const int y,const int x,const card_t* const hand, const int deck_size);
 
-void drawCard(int y,int x,int number, short show_card, short color);
+void drawCard(const int y,const int x,const card_t card, const short show_card, const short color);
 
-void determineNumber(int number,char *num_display);
+char determineSymbol(const card_t card);
+
+int determineSuit(const card_t card);
 
 void drawMenu();
 
