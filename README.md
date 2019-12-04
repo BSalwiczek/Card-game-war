@@ -2,6 +2,7 @@
 Project was created for subject basics of programming (IT specialization) in Gdansk university (Politechnika Gdańska). It contains two modes:
 * Normal war (variant A or B)
 * Wise war
+
 Rules of the gameplay are described in file [rules.pdf](rules.pdf) (only Polish)
 
 ## Prerequisites
