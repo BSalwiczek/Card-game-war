@@ -24,7 +24,7 @@ To run simply type
 ```
 
 ## Simulations
-If you want to make some simulations you need to uncomment ```#define SIMULATION``` flag in main.h file and change settings in ifdef SIMULATION in main.c file to adjust it to your needs.
+If you want to make some simulations you need to uncomment ```#define SIMULATION``` flag in main.h file and change settings in ```ifdef SIMULATION``` in main.c file to adjust it to your needs.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
