@@ -28,10 +28,10 @@ int main()
             return 0;
         }
     #else
-        game->deck_size = 52;
+        game->deck_size = 20;
         game->variant = A;
         game->moves = 0;
-        game->war_type = wise;
+        game->war_type = normal;
 
     #endif
 
@@ -53,11 +53,11 @@ int main()
     splitIntoTwoHands(deck,player1,player2, game->deck_size);
 
     #ifdef SIMULATION_MODE
-        player1->strategy = peaceful;
-        player2->strategy = peaceful;
+        // player1->strategy = peaceful;
+        // player2->strategy = peaceful;
 
         FILE *file;
-        file = fopen("run/Problem 2 - madra wojna/pvsp2.txt","a");
+        file = fopen("run/test.txt","a");
         if(file == NULL){
             printf("Otwarcie pliku nie powiodło sie\n");
             return 0;
@@ -66,16 +66,16 @@ int main()
 
         fprintf(file, "Deck size,");
         fprintf(file, "Moves,");
+        fprintf(file, "Variant,");
+        fprintf(file, "Rank1,");
+        fprintf(file, "Rank2,");
         fprintf(file, "Player1Strategy,");
         fprintf(file, "Player2Strategy,");
-        // fprintf(file, "Variant,");
-        // fprintf(file, "Rank1,");
-        // fprintf(file, "Rank2,");
         fprintf(file, "Winner\n");
 
-        for(int i=1;i<2;i++)
+        for(int i=1;i<100000;i++)
         {
-            printf("%i \n",i);
+            // printf("%i \n",i);
             clearCards(player1->hand,game->deck_size);
             clearCards(player2->hand,game->deck_size);
             clearCards(player1->stack,game->deck_size);
@@ -345,14 +345,23 @@ void playGame(player_t* const player1,player_t* const player2, game_t* const gam
         else
             war(player1,player2, game);
 
-        if(player1->hand[0].number == EMPTY && player1->buffor[0].number == EMPTY && player1->buffor[1].number == EMPTY)
+        short player2win = player1->hand[0].number == EMPTY && player1->buffor[0].number == EMPTY && player1->buffor[1].number == EMPTY;
+        short player1win = player2->hand[0].number == EMPTY && player2->buffor[0].number == EMPTY && player2->buffor[1].number == EMPTY;
+        if(player1win && player2win)
+        {
+            player1->player_status = win;
+            player2->player_status = win;
+            endGame(NULL,game->moves);
+            break;
+        }
+        if(player2win)
         {
             player1->player_status = defeat;
             player2->player_status = win;
             endGame(player2,game->moves);
             break;
         }
-        if(player2->hand[0].number == EMPTY && player2->buffor[0].number == EMPTY && player2->buffor[1].number == EMPTY)
+        if(player1win)
         {
             player2->player_status = defeat;
             player1->player_status = win;
@@ -373,7 +382,10 @@ void endGame(const player_t* const winner, const int moves)
     #ifndef SIMULATION_MODE
         getch();
         clear();
-        mvprintw(LINES/2+5,COLS/2 - 12,"%s wygrał! Ilosc ruchow %i",winner->name, moves);    
+        if(winner == NULL)
+            mvprintw(LINES/2+5,COLS/2 - 12,"Remis! Ilosc ruchow %i", moves);    
+        else
+            mvprintw(LINES/2+5,COLS/2 - 12,"%s wygrał! Ilosc ruchow %i",winner->name, moves);    
         refresh();
         getch();
     #endif
@@ -385,14 +397,14 @@ void playWiseTurn(player_t* const you,player_t* const opponent,player_t* const p
     {
         if(opponent->buffor[0].number != EMPTY)
         {
-            opponent->stack[0].number = opponent->buffor[0].number;
-            opponent->buffor[0].number = EMPTY;
+            opponent->stack[0] = opponent->buffor[0];
+            clearCard(&opponent->buffor[0]);
         }else{
-            opponent->stack[0].number = opponent->buffor[1].number;
-            opponent->buffor[1].number = EMPTY;
+            opponent->stack[0] = opponent->buffor[1];
+            clearCard(&opponent->buffor[1]);
         }
     }else{
-        opponent->stack[0].number = opponent->hand[0].number;
+        opponent->stack[0] = opponent->hand[0];
         shiftCardLeft(opponent->hand,1,game->deck_size);
 
     }
@@ -401,8 +413,8 @@ void playWiseTurn(player_t* const you,player_t* const opponent,player_t* const p
 
     if(you->buffor[0].number==EMPTY && you->buffor[1].number == EMPTY)
     {
-        you->buffor[0].number = you->hand[0].number;
-        you->buffor[1].number = you->hand[1].number;
+        you->buffor[0] = you->hand[0];
+        you->buffor[1] = you->hand[1];
         
         shiftCardLeft(you->hand,2,game->deck_size);
 
@@ -430,17 +442,6 @@ void playWiseTurn(player_t* const you,player_t* const opponent,player_t* const p
             }                 
         }
     }
-    // else{
-    //     if(you->buffor[0].number != EMPTY)
-    //     {
-    //         you->stack[0].number = you->buffor[0].number;
-    //         you->buffor[0].number = EMPTY;
-    //     }else{
-    //         you->stack[0].number = you->buffor[1].number;
-    //         you->buffor[1].number = EMPTY;
-    //     }
-    // }
-    // drawOutput(opponent,you,game);
 }
 
 char chooseCard(const player_t* const you, const card_t* const opponent_stack, const player_t* const player2)
@@ -594,11 +595,11 @@ int war(player_t* const player1, player_t* const player2, game_t* const game)
                 if(putCardsOnStackWise(player2, player1, game, cards_in_war)==0)
                     return 0;
             }else{ // normalna wojna
-                player1->stack[cards_in_war - 2].number = player1->hand[0].number;
-                player1->stack[cards_in_war - 1].number = player1->hand[1].number;
+                player1->stack[cards_in_war - 2] = player1->hand[0];
+                player1->stack[cards_in_war - 1] = player1->hand[1];
 
-                player2->stack[cards_in_war - 2].number = player2->hand[0].number;
-                player2->stack[cards_in_war - 1].number = player2->hand[1].number;
+                player2->stack[cards_in_war - 2] = player2->hand[0];
+                player2->stack[cards_in_war - 1] = player2->hand[1];
 
                 shiftCardLeft(player1->hand,2,game->deck_size);
                 shiftCardLeft(player2->hand,2,game->deck_size);
@@ -752,12 +753,15 @@ void saveResults(const player_t* const player1, const player_t* const player2, c
 {
     fprintf(file, "%i,",game->deck_size);
     fprintf(file, "%i,",game->moves);
-    // fprintf(file, "%i,",game->variant);
-    // fprintf(file, "%i,",player1->rank);
-    // fprintf(file, "%i,",player2->rank);
+    fprintf(file, "%i,",game->variant);
+    fprintf(file, "%i,",player1->rank);
+    fprintf(file, "%i,",player2->rank);
     fprintf(file, "%i,",player1->strategy);
     fprintf(file, "%i,",player2->strategy);
-    fprintf(file, "%i",player1->player_status == win);
+    if(player1->player_status == win && player2->player_status == win)
+        fprintf(file, "%i",-1);
+    else
+        fprintf(file, "%i",player1->player_status == win);
     fprintf(file,"\n");
 
 }
